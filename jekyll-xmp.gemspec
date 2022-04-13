@@ -14,4 +14,8 @@ Gem::Specification.new do |spec|
     spec.require_paths      = ["lib"]
     
     spec.add_dependency "jekyll"
+    spec.add_dependency "xmpr"
+    spec.add_dependency "classifier-reborn"
+    spec.add_dependency "nokogiri"
+    spec.add_dependency "webrick"
 end
