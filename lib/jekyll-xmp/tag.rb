@@ -117,28 +117,31 @@ module Jekyll
                 parse_markup(context)
                 validate_parameters()
                 
-                require 'xmpr'
-                xmp = XMPR.parse(
-                    xmp_from_jpeg(
-                        site.in_source_dir(
-                            @parameters["file_path"]
-                        )
-                    )
+                image_path = site.in_source_dir(
+                    @parameters["file_path"]
                 )
-                xmp[
+                
+                xml = nil
+                
+                if IO.read(image_path, 3, mode: "rb") == "\xFF\xD8\xFF".force_encoding("ASCII-8BIT")
+                    xml = xml_from_jpeg(image_path)
+                elsif IO.read(image_path, 8, mode: "rb") == "\x89PNG\x0d\x0a\x1a\x0a".force_encoding("ASCII-8BIT")
+                    xml = xml_from_png(image_path)
+                end
+                
+                require 'xmpr'
+                XMPR.parse(xml)[
                     @parameters["property_namespace"],
                     @parameters["property_name"],
                 ]
             end
             
-            def xmp_from_jpeg(file_path)
+            def xml_from_jpeg(file_path)
                 xap = "http://ns.adobe.com/xap/1.0/\0".freeze
-                file = File.open(file_path, 'r')
+                file = File.open(file_path, 'rb')
                 xml = nil
                 
                 begin
-                    return nil unless file.readbyte == 0xFF
-                    return nil unless file.readbyte == 0xD8
                     while !file.eof
                         case file.readbyte
                         when 0xFF
@@ -159,7 +162,24 @@ module Jekyll
                     file.close
                 end
                 
-                xml
+                return xml
+            end
+            
+            def xml_from_png(file_path)
+                file_chunks = nil
+                xml = nil
+                
+                require 'chunky_png'
+                File.open(file_path, 'rb') { |io|
+                    file_chunks = ChunkyPNG::Datastream.from_io(io).chunks 
+                }
+                file_chunks.each { |chunk|
+                    if chunk.type == "iTXt" and chunk.keyword == "XML:com.adobe.xmp"
+                        xml = chunk.text
+                    end
+                }
+                
+                return xml
             end
         end
     end

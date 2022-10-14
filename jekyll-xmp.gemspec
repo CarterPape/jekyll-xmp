@@ -18,4 +18,5 @@ Gem::Specification.new do |spec|
     spec.add_dependency "classifier-reborn"
     spec.add_dependency "nokogiri"
     spec.add_dependency "webrick"
+    spec.add_dependency "chunky_png"
 end

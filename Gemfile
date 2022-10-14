@@ -7,4 +7,6 @@ gem "xmpr",
     github: "CarterPape/xmpr",
     branch: "master"
 
+gem 'chunky_png'
+
 gemspec
